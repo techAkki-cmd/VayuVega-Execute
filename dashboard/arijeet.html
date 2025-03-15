@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quantum Reaction Edge - Performance Enhanced</title>
+
+  <!-- Google Fonts (Orbitron + Roboto) -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Chart.js (UMD Build) -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js"
+    crossorigin="anonymous">
+  </script>
+
+  <style>
+    /* RESET / GLOBAL STYLES */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: #101010;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 1rem;
+    }
+
+    /* WRAPPER */
+    .dashboard-container {
+      width: 100%;
+      max-width: 500px;
+      background-color: #1c1c1c;
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* OPTIONAL BACKGROUND ANGLED CORNERS */
+    .dashboard-container::before {
+      content: "";
+      position: absolute;
+      top: -50px;
+      right: -50px;
+      width: 150px;
+      height: 150px;
+      background: linear-gradient(135deg, #00d1ff, transparent);
+      opacity: 0.2;
+      transform: rotate(20deg);
+      z-index: 0;
+    }
+    .dashboard-container::after {
+      content: "";
+      position: absolute;
+      bottom: -50px;
+      left: -50px;
+      width: 150px;
+      height: 150px;
+      background: linear-gradient(315deg, #00ffa6, transparent);
+      opacity: 0.2;
+      transform: rotate(-20deg);
+      z-index: 0;
+    }
+
+    /* ANGLED DIVIDER */
+    .angled-divider {
+      width: 100%;
+      height: 16px;
+      background: linear-gradient(135deg, #00ffa6, transparent);
+      opacity: 0.25;
+      margin: 1rem 0;
+      border: none;
+    }
+
+    /* HEADER (HERO SECTION) */
+    .profile-header {
+      text-align: center;
+      margin-bottom: 1rem;
+      background:
+        radial-gradient(circle at center, rgba(255,255,255,0.05), transparent 70%),
+        linear-gradient(120deg, rgba(0,209,255,0.15), transparent);
+      padding: 1rem 0.5rem;
+      border-radius: 8px;
+      position: relative;
+      z-index: 1;
+    }
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #00d1ff;
+      margin-bottom: 0.5rem;
+      box-shadow: 0 0 8px #00d1ff; /* Neon glow */
+    }
+    .profile-header h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.2rem;
+      margin-bottom: 0.2rem;
+    }
+    .profile-subinfo {
+      font-size: 0.9rem;
+      color: #cccccc;
+      margin-bottom: 0.3rem;
+    }
+    .tagline {
+      font-size: 0.85rem;
+      color: #00d1ff;
+      font-style: italic;
+    }
+
+    /* NEON CORNER (GLOW) */
+    .neon-corner {
+      position: relative;
+      z-index: 1;
+    }
+    .neon-corner::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border: 2px solid #00ffa6;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #00ffa6;
+      opacity: 0.5;
+      pointer-events: none;
+      z-index: 1;
+      animation: pulseNeon 2s infinite alternate;
+    }
+    @keyframes pulseNeon {
+      0% {
+        box-shadow: 0 0 10px #00ffa6;
+      }
+      100% {
+        box-shadow: 0 0 20px #00d1ff;
+      }
+    }
+
+    /* HEADINGS WITH ICON */
+    .icon-text-inline {
+      display: inline-flex;       /* keeps icon and text side by side */
+      align-items: center;        /* vertical alignment of icon and text */
+      gap: 0.4rem;                /* space between the icon and the text */
+      font-family: 'Orbitron', sans-serif;
+    }
+    .icon-text-inline img {
+      width: 24px;
+      height: 24px;
+      object-fit: contain;
+    }
+
+    /* QUANTUM EDGE FEATURE */
+    .quantum-edge {
+      background: #282828;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    .quantum-edge h2 {
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+      letter-spacing: 1px;
+      /* replaced old direct icon usage with .icon-text-inline wrapper */
+    }
+    .quantum-edge-content {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .quantum-image {
+      max-width: 60px;
+      border-radius: 6px;
+      flex-shrink: 0; /* prevent image from shrinking */
+    }
+    .quantum-edge p {
+      font-size: 0.85rem;
+      color: #ccc;
+      line-height: 1.3;
+      flex: 1;
+    }
+    .update-container {
+      margin-top: 0.5rem;
+      font-size: 0.8rem;
+      color: #8effde;
+      font-style: italic;
+    }
+
+    /* METRIC CARDS */
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      margin: 1rem 0;
+    }
+    .card {
+      background: #2f2f2f;
+      border-radius: 8px;
+      padding: 0.75rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .card .metric-icon {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 0.3rem;
+    }
+    .card .metric-icon img {
+      width: 24px;
+      height: 24px;
+      object-fit: contain;
+    }
+    .metric-title {
+      font-size: 0.8rem;
+      color: #aaaaaa;
+      margin-bottom: 0.3rem;
+    }
+    .circular-ring {
+      width: 40px;
+      height: 40px;
+      margin: 0.3rem auto;
+      border-radius: 50%;
+      background: conic-gradient(
+        #00d1ff calc(var(--value) * 1%), 
+        #2f2f2f 0
+      );
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .circular-ring span {
+      font-size: 0.6rem;
+      color: #fff;
+      font-family: 'Orbitron', sans-serif;
+    }
+    .metric-value {
+      font-size: 1rem;
+      color: #00d1ff;
+      font-family: 'Orbitron', sans-serif;
+      margin-top: 0.4rem;
+    }
+    /* SPARKLINE */
+    .sparkline {
+      width: 100%;
+      max-height: 40px;
+      margin-top: 0.5rem;
+    }
+
+    /* CHART SECTION */
+    .chart-section {
+      margin: 1rem 0;
+    }
+    .chart-title {
+      display: inline-flex; 
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      font-size: 1.2rem;
+      font-family: 'Orbitron', sans-serif;
+      margin-bottom: 0.5rem;
+    }
+    .chart-container {
+      background: #282828;
+      border-radius: 8px;
+      padding: 0.75rem;
+      height: 230px;
+      max-width: 100%;
+      margin: 0 auto;
+      background-image: repeating-radial-gradient(
+        circle at center,
+        #333 1px,
+        #282828 2px,
+        #282828 20px
+      );
+      position: relative;
+    }
+
+    /* INSIGHTS & COACH NOTE */
+    .insights, .coach-note {
+      background: #282828;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      position: relative;
+      z-index: 1;
+    }
+    .insights h2, .coach-note h2 {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 1.2rem;
+      font-family: 'Orbitron', sans-serif;
+      margin-bottom: 0.5rem;
+    }
+    .insights p, .coach-note p {
+      font-size: 0.85rem;
+      color: #ccc;
+      line-height: 1.3;
+    }
+    .circular-progress {
+      width: 80px;
+      height: 80px;
+      margin: 0.5rem auto;
+      border-radius: 50%;
+      background: conic-gradient(
+        #00ffa6 calc(var(--value) * 1%),
+        #333 0
+      );
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .circular-progress::after {
+      content: attr(data-label);
+      position: absolute;
+      color: #fff;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.7rem;
+    }
+    .achievements {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-top: 0.5rem;
+    }
+    .achievement-box {
+      background: #1c1c1c;
+      padding: 0.4rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      color: #fff;
+      text-align: center;
+      font-family: 'Orbitron', sans-serif;
+      border: 1px solid #00d1ff;
+    }
+
+    /* PERSONALIZED PLAN (CARD CAROUSEL STYLE) */
+    .plan {
+      background:
+        linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
+        url('https://images.unsplash.com/photo-1594737625785-cd0833c7d0c5?auto=format&w=600&q=50');
+      background-size: cover;
+      background-position: center;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      position: relative;
+      z-index: 1;
+    }
+    .plan h2 {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 1.2rem;
+      font-family: 'Orbitron', sans-serif;
+      margin-bottom: 0.5rem;
+    }
+    .plan-cards {
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      margin-top: 0.5rem;
+      scrollbar-width: none;
+    }
+    .plan-cards::-webkit-scrollbar {
+      display: none;
+    }
+    .plan-card {
+      min-width: 140px;
+      background: #282828;
+      border-radius: 6px;
+      padding: 0.6rem;
+      flex-shrink: 0;
+    }
+    .plan-card strong {
+      display: block;
+      margin-bottom: 0.3rem;
+      color: #00d1ff;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.85rem;
+    }
+    .plan-card p {
+      font-size: 0.75rem;
+      color: #ccc;
+      line-height: 1.3;
+    }
+
+    /* BUTTONS */
+    .btn-bar {
+      margin-top: 0.5rem;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .btn-feature {
+      background: #00d1ff;
+      border: none;
+      border-radius: 4px;
+      padding: 0.4rem 0.8rem;
+      color: #000;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-family: 'Roboto', sans-serif;
+    }
+    .btn-feature:hover {
+      background: #00ffa6;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 480px) {
+      .dashboard-container {
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+      }
+      .quantum-edge-content {
+        flex-direction: column;
+        text-align: center;
+      }
+      .chart-container {
+        height: 200px;
+      }
+      .plan-cards {
+        gap: 0.4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- HEADER -->
+    <div class="profile-header">
+      <img
+        loading="lazy"
+        src="https://images.unsplash.com/photo-1511988617509-a57c8a288659?auto=format&fit=crop&w=90&q=80"
+        alt="Athlete Avatar"
+        class="profile-avatar"
+      />
+      <h1>Athlete: Priya Sharma</h1>
+      <div class="profile-subinfo">Sport: Sprinting | Age: 23</div>
+      <div class="tagline">"You're 85% closer to your weekly goal!"</div>
+    </div>
+
+    <!-- QUANTUM REACTION EDGE -->
+    <div class="quantum-edge neon-corner">
+      <!-- Use icon-text-inline to keep icon and text on a single line -->
+      <h2 class="icon-text-inline">
+        <img src="https://img.icons8.com/fluency/48/000000/flash.png" alt="Lightning Icon" />
+        Quantum Reaction Edge
+      </h2>
+      <div class="quantum-edge-content">
+        <img
+          loading="lazy"
+          src="https://images.unsplash.com/photo-1612810802174-fd79b4c68d3d?auto=format&fit=crop&w=60&q=80"
+          alt="Quantum Infographic"
+          class="quantum-image"
+        />
+        <p>
+          Real-time micro-adaptive workouts keep each session fresh. Watch for quantum 
+          fluctuations updating your data randomly!
+        </p>
+      </div>
+      <div class="update-container" id="qeUpdateText">
+        No micro-adaptation detected yet...
+      </div>
+    </div>
+
+    <!-- ANGLED DIVIDER -->
+    <hr class="angled-divider" />
+
+    <!-- METRIC CARDS -->
+    <div class="metrics">
+      <!-- Card: Heart Rate -->
+      <div class="card">
+        <div class="metric-icon">
+          <img src="https://img.icons8.com/color/48/null/heart-with-pulse.png" alt="Heart Icon">
+        </div>
+        <div class="metric-title">Heart Rate</div>
+        <div class="circular-ring" style="--value:75">
+          <span>75%</span>
+        </div>
+        <div class="metric-value">140 bpm</div>
+        <canvas id="sparkline1" class="sparkline"></canvas>
+      </div>
+      <!-- Card: Calories Burned -->
+      <div class="card">
+        <div class="metric-icon">
+          <img src="https://img.icons8.com/color/48/null/fire.png" alt="Fire/Calories Icon">
+        </div>
+        <div class="metric-title">Calories Burned</div>
+        <div class="circular-ring" style="--value:60">
+          <span>60%</span>
+        </div>
+        <div class="metric-value">600 kcal</div>
+        <canvas id="sparkline2" class="sparkline"></canvas>
+      </div>
+      <!-- Card: Training Load -->
+      <div class="card">
+        <div class="metric-icon">
+          <img src="https://img.icons8.com/color/48/null/dumbbell.png" alt="Training Load Icon">
+        </div>
+        <div class="metric-title">Training Load</div>
+        <div class="circular-ring" style="--value:85">
+          <span>85%</span>
+        </div>
+        <div class="metric-value">85%</div>
+        <canvas id="sparkline3" class="sparkline"></canvas>
+      </div>
+      <!-- Card: Sleep Recovery -->
+      <div class="card">
+        <div class="metric-icon">
+          <img src="https://img.icons8.com/color/48/null/sleeping.png" alt="Sleep Icon">
+        </div>
+        <div class="metric-title">Sleep Recovery</div>
+        <div class="circular-ring" style="--value:70">
+          <span>70%</span>
+        </div>
+        <div class="metric-value">7 hrs</div>
+        <canvas id="sparkline4" class="sparkline"></canvas>
+      </div>
+    </div>
+
+    <!-- ANGLED DIVIDER -->
+    <hr class="angled-divider" />
+
+    <!-- CHART SECTION -->
+    <div class="chart-section neon-corner">
+      <div class="chart-title">
+        <img src="https://img.icons8.com/fluency/48/null/line-chart.png" alt="Chart Icon" />
+        Sprint Speed (Last 7 Days)
+      </div>
+      <div class="chart-container">
+        <canvas id="performanceChart"></canvas>
+      </div>
+    </div>
+
+    <!-- ANGLED DIVIDER -->
+    <hr class="angled-divider" />
+
+    <!-- AI INSIGHTS -->
+    <div class="insights neon-corner">
+      <h2>
+        <img src="https://img.icons8.com/fluency/48/null/artificial-intelligence.png" alt="AI Icon" />
+        AI Insights
+      </h2>
+      <p>Your current sprint time has improved by 5%. Prioritize endurance in the next few days.</p>
+      <div class="circular-progress" style="--value:80" data-label="80%"></div>
+      <div class="achievements">
+        <div class="achievement-box">Longest Run: 5km</div>
+        <div class="achievement-box">Weekly Improvement: +2%</div>
+      </div>
+    </div>
+
+    <!-- PERSONALIZED PLAN -->
+    <div class="plan">
+      <h2>
+        <img src="https://img.icons8.com/emoji/48/null/check-mark-button-emoji.png" alt="Plan Icon" />
+        Personalized Plan
+      </h2>
+      <div class="plan-cards">
+        <div class="plan-card">
+          <strong>Warm-up</strong>
+          <p>10 minutes of jogging + dynamic stretches</p>
+        </div>
+        <div class="plan-card">
+          <strong>Intervals</strong>
+          <p>5×400m sprints with 1-min rest between sets</p>
+        </div>
+        <div class="plan-card">
+          <strong>Cool-down</strong>
+          <p>Yoga/stretches for 10 minutes</p>
+        </div>
+      </div>
+      <div class="btn-bar">
+        <button class="btn-feature">View Stats</button>
+        <button class="btn-feature">Customize Plan</button>
+        <button class="btn-feature">Share Progress</button>
+      </div>
+    </div>
+
+    <!-- COACH'S NOTE -->
+    <div class="coach-note neon-corner">
+      <h2>
+        <img src="https://img.icons8.com/fluency/48/null/whistle.png" alt="Coach Icon" />
+        Coach's Note
+      </h2>
+      <p>
+        “Solid improvement, Priya! Keep the momentum going—each quantum 
+        update refines your performance in real-time.”
+      </p>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT: CHART & QUANTUM SCRIPT -->
+  <script>
+    // 1) Initialize the main performance Chart
+    const ctx = document.getElementById("performanceChart").getContext("2d");
+    let chartData = [12.5, 12.3, 12.4, 12.1, 12.0, 11.9, 11.8];
+
+    const myChart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+        datasets: [
+          {
+            label: "Sprint Time (sec)",
+            data: chartData,
+            borderColor: "#00d1ff",
+            backgroundColor: "rgba(0, 209, 255, 0.15)",
+            tension: 0.25,
+            fill: true,
+            pointBackgroundColor: "#ffffff",
+            pointBorderColor: "#00d1ff",
+            pointRadius: 3,
+          },
+        ],
+      },
+      options: {
+        maintainAspectRatio: false,
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: false,
+            ticks: { color: "#ccc" },
+            grid: { color: "#333" },
+          },
+          x: {
+            ticks: { color: "#ccc" },
+            grid: { color: "#333" },
+          },
+        },
+        plugins: {
+          legend: { display: false },
+        },
+      },
+    });
+
+    // 2) Quantum Micro-Adaptations
+    function applyQuantumUpdates() {
+      // Random index
+      const randomIndex = Math.floor(Math.random() * chartData.length);
+      // Random shift from -0.2 to +0.2
+      const randomShift = (Math.random() - 0.5) / 2;
+
+      chartData[randomIndex] = Number(
+        (chartData[randomIndex] + randomShift).toFixed(2)
+      );
+      myChart.data.datasets[0].data = chartData;
+      myChart.update();
+
+      // Display update message
+      document.getElementById("qeUpdateText").textContent = 
+        `Quantum micro-adaptation at [${myChart.data.labels[randomIndex]}]: adjusted by ${randomShift.toFixed(2)}s`;
+    }
+    // Trigger every 5s
+    setInterval(applyQuantumUpdates, 5000);
+
+    // 3) Initialize Mini Sparklines
+    const sparklineConfigs = [
+      { el: "sparkline1", data: [140, 142, 138, 141, 139, 140, 140] },
+      { el: "sparkline2", data: [500, 550, 620, 610, 590, 600, 600] },
+      { el: "sparkline3", data: [70, 75, 80, 83, 85, 86, 85] },
+      { el: "sparkline4", data: [6, 6.5, 7, 7, 7.2, 7, 7] },
+    ];
+
+    sparklineConfigs.forEach(cfg => {
+      const ctxSpark = document.getElementById(cfg.el).getContext('2d');
+      new Chart(ctxSpark, {
+        type: 'line',
+        data: {
+          labels: cfg.data.map((_, i) => i + 1),
+          datasets: [{
+            data: cfg.data,
+            borderColor: '#00ffa6',
+            backgroundColor: 'rgba(0, 255, 166, 0.1)',
+            tension: 0.3,
+            fill: true,
+            pointRadius: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { display: false },
+            x: { display: false },
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: { enabled: false }
+          }
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>
