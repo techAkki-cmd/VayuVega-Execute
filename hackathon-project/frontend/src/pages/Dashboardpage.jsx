@@ -288,18 +288,16 @@
       try {
         // First, call the AI service to register the product
         console.log("Passing to /addproduct", productData);
-        const aiResponse = await axios.post(
-          `${import.meta.env.VITE_SERVER_URL}/add-product`,
-          {
-            product_name: productData.p_name,
+        const aiResponse = await fetch(`${import.meta.env.VITE_AI_URL}/add-product`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': 'true'
           },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              'ngrok-skip-browser-warning': 'true'
-            }
-          }
-        );
+          body: JSON.stringify({
+            product_name: productData.p_name,
+          })
+        });
 
         if (!aiResponse.ok) {
           throw new Error('Failed to register product with AI service');
@@ -482,16 +480,14 @@
             for (const reviewData of reviewsForAnalysis) {
               try {
                 console.log('Analyzing review:', reviewData);
-                const response = await axios.post(
-                  `${import.meta.env.VITE_SERVER_URL}/analyze-feedback`,
-                  reviewData,
-                  {
-                    headers: {
-                      'Content-Type': 'application/json',
-                      'ngrok-skip-browser-warning': 'true'
-                    }
-                  }
-                );
+                const response = await fetch(`${import.meta.env.VITE_AI_URL}/analyze-feedback`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'ngrok-skip-browser-warning': 'true'
+                  },
+                  body: JSON.stringify(reviewData)
+                });
 
                 if (!response.ok) {
                   console.error('Error analyzing review:', reviewData);
@@ -511,7 +507,7 @@
           // Then, fetch the analyzed sentiment data using p_id
           try {
             const sentimentResponse = await axios.get(
-              `${import.meta.env.VITE_SERVER_URL}/product-sentiment/${supabaseProduct.p_id}`,
+              `${import.meta.env.VITE_AI_URL}/product-sentiment/${supabaseProduct.p_id}`,
               {
                 headers: {
                   'Accept': 'application/json',

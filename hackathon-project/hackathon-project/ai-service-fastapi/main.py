@@ -16,7 +16,7 @@ from pymongo import MongoClient
 from collections import defaultdict
 import requests
 
-API_KEY = "3ec3c31bbd662eb1f7bdf8ba9106398e7203428a78c455d83c05210abb9a2519"
+API_KEY = ""
 def fetch_shopping_results(product_name):
     url = "https://serpapi.com/search.json"
     params = {
@@ -79,7 +79,7 @@ def build_competitor_analysis(product_id):
         })
     
     return competitor_analysis
-client = MongoClient("mongodb+srv://ashmit05:Ashm2005@cluster0.fhe8ugd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+client = MongoClient("")
 db = client["Execute_4"]
 collection = db["features_analysis"]
 FEATURE_CATEGORIES = {
