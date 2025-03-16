@@ -29,7 +29,7 @@ By default, the app will be available at `http://localhost:5173/`.
 ### 🛠 Environment Variables
 Create a `.env` file in the root directory and add your environment variables:
 ```env
-    VITE_SERVER_URL="http://localhost:3000"
+    VITE_SERVER_URL="http://localhost:8080"
     VITE_SUPABASE_URL=your_supabase_url
     VITE_SUPABASE_ANON_KEY=your_supabase_key
 ```
