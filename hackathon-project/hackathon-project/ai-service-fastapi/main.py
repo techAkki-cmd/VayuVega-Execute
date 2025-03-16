@@ -1,7 +1,12 @@
-import shap
-import numpy as np
 from transformers import pipeline
+from fastapi import FastAPI
+from pymongo import MongoClient
+from pydantic import BaseModel
+import nest_asyncio
+from pyngrok import ngrok
+import uvicorn
 import spacy
+
 nlp = spacy.load("en_core_web_sm")
 sentiment_analyzer = pipeline("sentiment-analysis", model="nlptown/bert-base-multilingual-uncased-sentiment")
 summarizer = pipeline("summarization", model="google/pegasus-cnn_dailymail")
@@ -184,7 +189,7 @@ def update_mongodb(product_id):
     review_count = 0
     product_reviews[product_id].clear()
     product_summaries[product_id].clear()
-    competitor_data[product_id] = []  # Reset competitor data
+    competitor_data[product_id] = []
 
 
 def analyze_feedback(review, product_id):
@@ -221,7 +226,6 @@ def analyze_feedback(review, product_id):
         "sentiment": mapped_sentiment
     })
 
-    # Compute competitor analysis at feedback level
     if product_id not in competitor_data:
         competitor_data[product_id] = []
     competitor_data[product_id].extend(build_competitor_analysis(product_id))
@@ -235,14 +239,6 @@ def analyze_feedback(review, product_id):
         "Confidence": sentiment['score'],
         "Summarized Feedback": summary
     }
-
-
-from fastapi import FastAPI
-from pymongo import MongoClient
-from pydantic import BaseModel
-import nest_asyncio
-from pyngrok import ngrok
-import uvicorn
 
 app = FastAPI()
 class ReviewInput(BaseModel):
@@ -277,6 +273,6 @@ def start_server():
     nest_asyncio.apply()
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+public_url = start_ngrok()
+print(public_url)
+start_server()
