@@ -6,6 +6,7 @@ import nest_asyncio
 from pyngrok import ngrok
 import uvicorn
 import spacy
+import uuid
 
 nlp = spacy.load("en_core_web_sm")
 sentiment_analyzer = pipeline("sentiment-analysis", model="nlptown/bert-base-multilingual-uncased-sentiment")
@@ -82,12 +83,69 @@ client = MongoClient("mongodb+srv://ashmit05:Ashm2005@cluster0.fhe8ugd.mongodb.n
 db = client["Execute_4"]
 collection = db["features_analysis"]
 FEATURE_CATEGORIES = {
-    "battery": ["battery", "charging", "power"],
-    "camera": ["camera", "photo", "picture", "image"],
-    "display": ["screen", "display", "resolution"],
-    "performance": ["speed", "lag", "performance", "processor"],
-    "design": ["design", "build", "appearance"],
-    "customer support": ["support", "warranty", "service"]
+    # Electronics & Gadgets
+    "battery": ["battery", "charging", "power", "long battery", "fast charging", "battery life", "wireless charging"],
+    "camera": ["camera", "photo", "picture", "image", "lens", "megapixel", "night mode", "video recording", "zoom", "autofocus"],
+    "display": ["screen", "display", "resolution", "brightness", "refresh rate", "OLED", "LCD", "touchscreen", "HDR", "contrast"],
+    "performance": ["speed", "lag", "performance", "processor", "RAM", "smooth", "slow", "fast", "benchmark", "overheating"],
+    "design": ["design", "build", "appearance", "aesthetic", "color", "thin", "bezel", "premium", "materials", "lightweight"],
+    "durability": ["durability", "sturdy", "rugged", "scratch-resistant", "drop-proof", "waterproof", "shockproof", "shock absorption"],
+    "software": ["software", "OS", "update", "bug", "UI", "user experience", "Android", "iOS", "app support", "compatibility"],
+    "security": ["security", "fingerprint", "face recognition", "encryption", "password", "biometric", "privacy", "anti-theft"],
+    "sound": ["sound", "audio", "speaker", "microphone", "volume", "bass", "clarity", "stereo", "noise cancellation", "treble"],
+    "connectivity": ["WiFi", "Bluetooth", "5G", "network", "signal", "cellular", "hotspot", "NFC", "USB", "wireless", "infrared"],
+    "storage": ["storage", "capacity", "GB", "expandable", "memory", "internal storage", "microSD", "cloud storage"],
+    "gaming": ["gaming", "frame rate", "FPS", "graphics", "cooling", "thermals", "response time", "controller", "RGB lighting"],
+    "accessories": ["charger", "headphones", "case", "cover", "screen protector", "stylus", "keyboard", "mouse", "tripod"],
+    "calls": ["call quality", "voice clarity", "network reception", "signal strength", "noise cancellation", "hands-free"],
+    
+    # Home Appliances
+    "energy efficiency": ["energy-efficient", "low power", "eco-friendly", "star rating", "consumption", "wattage"],
+    "capacity": ["capacity", "size", "storage", "load", "volume", "liters", "kg", "cubic feet"],
+    "ease of use": ["easy to use", "user-friendly", "intuitive", "simple", "convenient"],
+    "cleaning": ["cleaning", "maintenance", "self-cleaning", "hygienic", "dishwasher safe"],
+    "safety": ["safety", "child lock", "auto shutoff", "overheat protection", "fireproof"],
+    "temperature control": ["temperature", "cooling", "heating", "adjustable", "thermostat", "auto mode"],
+    
+    # Vehicles & Automotive
+    "fuel efficiency": ["mileage", "fuel efficiency", "mpg", "kilometers per liter", "economical"],
+    "engine": ["engine", "horsepower", "torque", "cylinders", "turbo", "rpm"],
+    "comfort": ["comfort", "ergonomic", "cushioning", "soft seats", "adjustable", "lumbar support"],
+    "safety": ["airbags", "ABS", "traction control", "blind-spot detection", "collision warning"],
+    "infotainment": ["infotainment", "touchscreen", "Bluetooth", "car play", "voice assistant"],
+    
+    # Fashion & Clothing
+    "fabric": ["cotton", "wool", "silk", "polyester", "linen", "denim", "breathable", "stretchable"],
+    "fit": ["fit", "size", "slim", "loose", "regular", "tight", "custom fit"],
+    "durability": ["durability", "tear-resistant", "sturdy", "fades", "color retention"],
+    "water resistance": ["waterproof", "water-resistant", "weatherproof", "moisture-wicking"],
+    
+    # Beauty & Skincare
+    "skin type": ["sensitive", "oily", "dry", "combination", "all skin types"],
+    "ingredients": ["organic", "natural", "paraben-free", "vegan", "hypoallergenic"],
+    "fragrance": ["fragrance", "scent", "smell", "aroma", "long-lasting"],
+    
+    # Food & Beverages
+    "taste": ["taste", "flavor", "sweet", "spicy", "bitter", "savory", "rich"],
+    "nutrition": ["nutritious", "protein", "fiber", "sugar-free", "low-calorie", "organic"],
+    "packaging": ["packaging", "sealed", "eco-friendly", "resealable", "leak-proof"],
+    
+    # Furniture & Home Decor
+    "material": ["wood", "metal", "plastic", "glass", "leather", "fabric"],
+    "assembly": ["easy to assemble", "pre-assembled", "DIY", "modular"],
+    "aesthetic": ["modern", "classic", "vintage", "rustic", "minimalist"],
+    
+    # Fitness & Sports
+    "performance": ["stamina", "boost", "lightweight", "grip", "breathability"],
+    "durability": ["wear-resistant", "shock absorption", "tear-proof", "long-lasting"],
+    
+    # Books & Media
+    "content": ["engaging", "informative", "entertaining", "boring", "plot", "character development"],
+    "format": ["paperback", "hardcover", "ebook", "audiobook"],
+    
+    # Pricing & Value
+    "price": ["price", "cost", "expensive", "cheap", "value for money", "affordable", "budget"],
+    "brand": ["brand", "popular", "reputable", "well-known", "trusted", "premium", "luxury"]
 }
 
 BATCH_SIZE = 5
@@ -245,6 +303,9 @@ class ReviewInput(BaseModel):
     product_id: str
     review: str
 
+class ProductInput(BaseModel):
+    product_name: str
+
 @app.get("/all-product-sentiments")
 def get_all_products():
     products = list(collection.find({}))
@@ -258,6 +319,14 @@ def get_product(product_id: str):
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     return product
+
+
+@app.post("/add-product")
+def add_product(product_input: ProductInput):
+    product_id = str(uuid.uuid4())
+    new_product = {"_id": product_id, "product_name": product_input.product_name}
+    collection.insert_one(new_product)
+    return {"message": "Product added successfully", "product_id": product_id}
 
 @app.post("/analyze-feedback")
 def analyze_review(review_input: ReviewInput):
