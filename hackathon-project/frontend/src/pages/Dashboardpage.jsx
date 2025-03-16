@@ -52,185 +52,90 @@
   const mockSentimentData = {
     "products": [
       {
-        "_id": "45735423497KAJJ",
-        "product_name": "MacBook Pro 16",
-        "positive_count": 856,
-        "negative_count": 124,
-        "neutral_count": 220,
+        "_id": "97HJWQ8347SDFG",
+        "product_name": "Smart X Fit",
+        "positive_count": 640,
+        "negative_count": 160,
+        "neutral_count": 200,
         "positive": {
-          "features": ["Performance", "Display Quality", "Build Quality"],
-          "counts": [245, 180, 165]
+          "features": ["Battery Life", "Comfort", "Price"],
+          "counts": [230, 190, 150]
         },
         "negative": {
-          "features": ["Price", "Battery Life", "Port Selection"],
-          "counts": [45, 32, 28]
+          "features": ["Build Quality", "Accuracy", "App Sync"],
+          "counts": [60, 55, 45]
         },
         "competitor_analysis": [
           {
-            "product_name": "MacBook Pro 16",
+            "product_name": "Smart X Fit",
             "ratings": [
-              { "stars": 1, "amount": 24 },
+              { "stars": 1, "amount": 30 },
+              { "stars": 2, "amount": 55 },
+              { "stars": 3, "amount": 110 },
+              { "stars": 4, "amount": 250 },
+              { "stars": 5, "amount": 455 }
+            ],
+            "filters": [
+              { "label": "Battery Life", "count": 290 },
+              { "label": "Comfort", "count": 260 },
+              { "label": "Price", "count": 230 },
+              { "label": "Accuracy", "count": 180 },
+              { "label": "Build Quality", "count": 150 },
+              { "label": "App Sync", "count": 140 }
+            ]
+          },
+          {
+            "product_name": "FitBand Pro",
+            "ratings": [
+              { "stars": 1, "amount": 40 },
+              { "stars": 2, "amount": 70 },
+              { "stars": 3, "amount": 130 },
+              { "stars": 4, "amount": 280 },
+              { "stars": 5, "amount": 400 }
+            ]
+          },
+          {
+            "product_name": "ActiveFit 3",
+            "ratings": [
+              { "stars": 1, "amount": 25 },
               { "stars": 2, "amount": 45 },
               { "stars": 3, "amount": 120 },
-              { "stars": 4, "amount": 325 },
-              { "stars": 5, "amount": 486 }
-            ],
-            "filters": [
-              { "label": "Performance", "count": 425 },
-              { "label": "Display", "count": 380 },
-              { "label": "Build Quality", "count": 365 },
-              { "label": "Battery Life", "count": 320 },
-              { "label": "Keyboard", "count": 280 },
-              { "label": "Speakers", "count": 245 },
-              { "label": "Port Selection", "count": 220 },
-              { "label": "Price", "count": 195 },
-              { "label": "Software", "count": 175 },
-              { "label": "Webcam", "count": 150 }
-            ]
-          },
-          {
-            "product_name": "Dell XPS 17",
-            "ratings": [
-              { "stars": 1, "amount": 35 },
-              { "stars": 2, "amount": 68 },
-              { "stars": 3, "amount": 156 },
-              { "stars": 4, "amount": 287 },
-              { "stars": 5, "amount": 354 }
-            ],
-            "filters": [
-              { "label": "Performance", "count": 380 },
-              { "label": "Display", "count": 345 },
-              { "label": "Build Quality", "count": 310 },
-              { "label": "Price", "count": 285 }
-            ]
-          },
-          {
-            "product_name": "Razer Blade 17",
-            "ratings": [
-              { "stars": 1, "amount": 42 },
-              { "stars": 2, "amount": 75 },
-              { "stars": 3, "amount": 168 },
-              { "stars": 4, "amount": 245 },
-              { "stars": 5, "amount": 320 }
-            ]
-          },
-          {
-            "product_name": "ASUS ROG Zephyrus",
-            "ratings": [
-              { "stars": 1, "amount": 38 },
-              { "stars": 2, "amount": 82 },
-              { "stars": 3, "amount": 175 },
-              { "stars": 4, "amount": 268 },
-              { "stars": 5, "amount": 337 }
+              { "stars": 4, "amount": 290 },
+              { "stars": 5, "amount": 410 }
             ]
           }
         ],
         "reviews": [
           {
-            "review": "The M1 Max performance is absolutely incredible for my video editing work.",
+            "review": "Battery lasts much longer than expected. Great value for money!",
             "sentiment": "positive",
-            "confidence": 0.95
+            "confidence": 0.92
           },
           {
-            "review": "Beautiful display, but the price is really steep for what you get.",
+            "review": "Comfortable to wear all day, but the step count accuracy seems a bit off.",
             "sentiment": "neutral",
-            "confidence": 0.82
+            "confidence": 0.80
           },
           {
-            "review": "Battery life isn't as good as advertised when running intensive tasks.",
+            "review": "The app frequently disconnects, making it unreliable for tracking workouts.",
             "sentiment": "negative",
-            "confidence": 0.88
+            "confidence": 0.87
           },
           {
-            "review": "The build quality is exceptional, feels very premium.",
-            "sentiment": "positive",
-            "confidence": 0.91
-          },
-          {
-            "review": "Limited port selection means I need to carry dongles everywhere.",
-            "sentiment": "negative",
-            "confidence": 0.85
-          }
-        ]
-      },
-      {
-        "_id": "67d66f3010cc0d992fabe38a",
-        "product_name": "iPhone 15 Pro",
-        "positive_count": 925,
-        "negative_count": 145,
-        "neutral_count": 230,
-        "positive": {
-          "features": ["Camera Quality", "Performance", "Design"],
-          "counts": [285, 265, 210]
-        },
-        "negative": {
-          "features": ["Battery Life", "Price", "USB-C Adoption"],
-          "counts": [52, 48, 35]
-        },
-        "competitor_analysis": [
-          {
-            "product_name": "iPhone 15 Pro",
-            "ratings": [
-              { "stars": 1, "amount": 28 },
-              { "stars": 2, "amount": 52 },
-              { "stars": 3, "amount": 145 },
-              { "stars": 4, "amount": 378 },
-              { "stars": 5, "amount": 547 }
-            ],
-            "filters": [
-              { "label": "Camera System", "count": 485 },
-              { "label": "Performance", "count": 425 },
-              { "label": "Design", "count": 380 },
-              { "label": "Display", "count": 345 },
-              { "label": "Battery Life", "count": 320 },
-              { "label": "5G", "count": 280 },
-              { "label": "USB-C", "count": 265 },
-              { "label": "Price", "count": 245 },
-              { "label": "iOS", "count": 220 },
-              { "label": "ProMotion", "count": 195 }
-            ]
-          },
-          {
-            "product_name": "Samsung Galaxy S23 Ultra",
-            "ratings": [
-              { "stars": 1, "amount": 32 },
-              { "stars": 2, "amount": 58 },
-              { "stars": 3, "amount": 165 },
-              { "stars": 4, "amount": 342 },
-              { "stars": 5, "amount": 503 }
-            ]
-          },
-          {
-            "product_name": "Google Pixel 8 Pro",
-            "ratings": [
-              { "stars": 1, "amount": 35 },
-              { "stars": 2, "amount": 62 },
-              { "stars": 3, "amount": 158 },
-              { "stars": 4, "amount": 325 },
-              { "stars": 5, "amount": 420 }
-            ]
-          }
-        ],
-        "reviews": [
-          {
-            "review": "The camera system is absolutely phenomenal, especially in low light.",
+            "review": "Very stylish and lightweight. I love the display quality.",
             "sentiment": "positive",
             "confidence": 0.94
           },
           {
-            "review": "USB-C is finally here but now I need new cables.",
-            "sentiment": "neutral",
-            "confidence": 0.78
-          },
-          {
-            "review": "Battery life could be better with heavy use.",
+            "review": "Build quality isn't great. Mine developed scratches within a week.",
             "sentiment": "negative",
-            "confidence": 0.86
+            "confidence": 0.85
           }
         ]
       }
     ]
-  };
+  }
+  
 
   // Dashboard home component
   const DashboardHome = () => {
