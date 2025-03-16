@@ -11,8 +11,8 @@ Make sure you have the following installed:
 
 ### 📥 Clone the Repository
 ```sh
-git clone https://github.com/your-username/your-repo-name.git
-cd your-repo-name
+git clone https://github.com/techAkki-cmd/VayuVega-Execute.git
+cd hackathon-project/frontend
 ```
 
 ### 📌 Install Dependencies
@@ -42,7 +42,7 @@ Go to this link: [Google Colab Model](https://colab.research.google.com/drive/1M
 Run the model, and at the end, you will get a URL.
 Replace `VITE_AI_URL` in the `.env` file with the generated URL.
 
-## Backend Setup (Spring Boot)
+## For Running Locally :Backend Setup (Spring Boot) (Optional)
 
 This project uses Spring Boot for the backend. Follow these steps to run the server locally.
 
