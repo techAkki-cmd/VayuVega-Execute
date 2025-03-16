@@ -443,25 +443,92 @@ const ProductAnalytics = () => {
         if (supabaseError) throw supabaseError;
         setProduct(supabaseProduct);
 
-        // Get the mock sentiment data
-        const productSentiment = mockSentimentData.products.find(p => 
-          p.product_name.toLowerCase() === supabaseProduct.p_name.toLowerCase()
-        );
-        
-        if (!productSentiment) {
-          // If no exact match, use the first mock product as fallback
-          setSentimentData(mockSentimentData.products[0]);
-        } else {
-          setSentimentData(productSentiment);
+        try {
+          // First, send reviews for analysis one by one
+          const reviewsForAnalysis = (supabaseProduct.p_reviews || []).map(review => ({
+            product_id: productId,
+            review: review.review
+          }));
+
+          if (reviewsForAnalysis.length > 0) {
+            console.log('Starting analysis of reviews:', reviewsForAnalysis.length);
+            setLoading(true);
+
+            // Process reviews sequentially
+            for (const reviewData of reviewsForAnalysis) {
+              try {
+                console.log('Analyzing review:', reviewData);
+                const response = await fetch('https://c590-34-16-138-253.ngrok-free.app/analyze-feedback', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(reviewData)  // Send single review object
+                });
+
+                if (!response.ok) {
+                  console.error('Error analyzing review:', reviewData);
+                  continue; // Continue with next review if one fails
+                }
+
+                const result = await response.json();
+                console.log('Review analysis result:', result);
+
+                // Optional: Add delay between requests to prevent rate limiting
+                await new Promise(resolve => setTimeout(resolve, 500));
+              } catch (reviewError) {
+                console.error('Error processing review:', reviewError);
+                // Continue with next review if one fails
+              }
+            }
+          }
+
+          // Then, fetch the analyzed sentiment data
+          const sentimentResponse = await fetch(`https://d92d-34-16-138-253.ngrok-free.app/product-sentiment/${productId}`);
+          
+          if (!sentimentResponse.ok) {
+            throw new Error('Failed to fetch sentiment data');
+          }
+
+          const apiSentimentData = await sentimentResponse.json();
+          console.log('API Sentiment Data:', apiSentimentData);
+          
+          // Transform API data to match our component's expected format
+          const transformedSentimentData = {
+            _id: productId,
+            product_name: apiSentimentData.product_name,
+            positive_count: apiSentimentData.positive_count,
+            negative_count: apiSentimentData.negative_count,
+            neutral_count: apiSentimentData.neutral_count,
+            positive: apiSentimentData.positive,
+            negative: apiSentimentData.negative,
+            competitor_analysis: apiSentimentData.competitor_analysis,
+            reviews: apiSentimentData.reviews || apiSentimentData.summaries?.map(summary => ({
+              review: summary.summary,
+              sentiment: summary.sentiment,
+              confidence: 1.0
+            })) || []
+          };
+
+          setSentimentData(transformedSentimentData);
+
+        } catch (apiError) {
+          console.error('Error with AI analysis:', apiError);
+          // Fallback to mock data on error
+          const productSentiment = mockSentimentData.products.find(p => 
+            p.product_name.toLowerCase() === supabaseProduct.p_name.toLowerCase()
+          );
+          setSentimentData(productSentiment || mockSentimentData.products[0]);
+        } finally {
+          setLoading(false);
         }
+
       } catch (err) {
         console.error('Error fetching data:', err);
         setError(err.message);
         // Use mock data as fallback
         setProduct({ id: productId, p_name: mockSentimentData.products[0].product_name });
         setSentimentData(mockSentimentData.products[0]);
-      } finally {
-        setLoading(false);
       }
     };
 
