@@ -282,38 +282,45 @@ const Products = () => {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleAddProduct = async (productData) => {
     try {
-      // Validate price is a number
-      const price = parseFloat(newProduct.p_price);
-      if (isNaN(price)) {
-        toast.error("Price must be a valid number");
-        return;
+      // First, call the AI service to register the product
+      console.log("Passing to /addproduct", productData);
+      const aiResponse = await fetch('https://5f4e-34-16-138-253.ngrok-free.app/add-product', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          product_name: productData.p_name,
+        })
+      });
+
+      if (!aiResponse.ok) {
+        throw new Error('Failed to register product with AI service');
       }
 
+      const aiData = await aiResponse.json();
+      const aiProductId = aiData.product_id; // Get the product ID from AI service
+
+      // Then add to Supabase with both original data and AI product ID
       const { data, error } = await supabase
         .from('products')
-        .insert([
-          { 
-            p_name: newProduct.p_name,
-            p_description: newProduct.p_description,
-            p_price: price
-          }
-        ])
-        .select();
+        .insert({
+          ...productData,
+          p_id: aiProductId // Store the AI-provided product ID
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
-      // Add new product to state
-      setProducts(prev => [...prev, data[0]]);
-      toast.success("Product added successfully!");
-      
-      // Reset form and close dialog
-      setNewProduct({ p_name: '', p_description: '', p_price: '' });
+      setProducts(prevProducts => [...prevProducts, data]);
       setIsDialogOpen(false);
+      toast.success('Product added successfully!');
     } catch (err) {
-      toast.error(err.message);
+      console.error('Error adding product:', err);
+      toast.error('Failed to add product');
     }
   };
 
@@ -332,7 +339,16 @@ const Products = () => {
             <DialogHeader>
               <DialogTitle>Add New Product</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              // Validate price is a number
+              const price = parseFloat(newProduct.p_price);
+              if (isNaN(price)) {
+                toast.error("Price must be a valid number");
+                return;
+              }
+              handleAddProduct(newProduct);
+            }} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="p_name">Product Name</Label>
                 <Input
@@ -426,7 +442,6 @@ const ProductAnalytics = () => {
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [sentimentData, setSentimentData] = useState(null);
   const [selectedCompetitor, setSelectedCompetitor] = useState(null);
 
@@ -443,92 +458,89 @@ const ProductAnalytics = () => {
         if (supabaseError) throw supabaseError;
         setProduct(supabaseProduct);
 
-        try {
-          // First, send reviews for analysis one by one
-          const reviewsForAnalysis = (supabaseProduct.p_reviews || []).map(review => ({
-            product_id: productId,
-            review: review.review
-          }));
-
-          if (reviewsForAnalysis.length > 0) {
-            console.log('Starting analysis of reviews:', reviewsForAnalysis.length);
-            setLoading(true);
-
-            // Process reviews sequentially
-            for (const reviewData of reviewsForAnalysis) {
-              try {
-                console.log('Analyzing review:', reviewData);
-                const response = await fetch('https://c590-34-16-138-253.ngrok-free.app/analyze-feedback', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify(reviewData)  // Send single review object
-                });
-
-                if (!response.ok) {
-                  console.error('Error analyzing review:', reviewData);
-                  continue; // Continue with next review if one fails
-                }
-
-                const result = await response.json();
-                console.log('Review analysis result:', result);
-
-                // Optional: Add delay between requests to prevent rate limiting
-                await new Promise(resolve => setTimeout(resolve, 500));
-              } catch (reviewError) {
-                console.error('Error processing review:', reviewError);
-                // Continue with next review if one fails
-              }
-            }
-          }
-
-          // Then, fetch the analyzed sentiment data
-          const sentimentResponse = await fetch(`https://d92d-34-16-138-253.ngrok-free.app/product-sentiment/${productId}`);
-          
-          if (!sentimentResponse.ok) {
-            throw new Error('Failed to fetch sentiment data');
-          }
-
-          const apiSentimentData = await sentimentResponse.json();
-          console.log('API Sentiment Data:', apiSentimentData);
-          
-          // Transform API data to match our component's expected format
-          const transformedSentimentData = {
-            _id: productId,
-            product_name: apiSentimentData.product_name,
-            positive_count: apiSentimentData.positive_count,
-            negative_count: apiSentimentData.negative_count,
-            neutral_count: apiSentimentData.neutral_count,
-            positive: apiSentimentData.positive,
-            negative: apiSentimentData.negative,
-            competitor_analysis: apiSentimentData.competitor_analysis,
-            reviews: apiSentimentData.reviews || apiSentimentData.summaries?.map(summary => ({
-              review: summary.summary,
-              sentiment: summary.sentiment,
-              confidence: 1.0
-            })) || []
-          };
-
-          setSentimentData(transformedSentimentData);
-
-        } catch (apiError) {
-          console.error('Error with AI analysis:', apiError);
-          // Fallback to mock data on error
-          const productSentiment = mockSentimentData.products.find(p => 
-            p.product_name.toLowerCase() === supabaseProduct.p_name.toLowerCase()
-          );
-          setSentimentData(productSentiment || mockSentimentData.products[0]);
-        } finally {
-          setLoading(false);
+        // Use p_id for sentiment analysis
+        if (!supabaseProduct.p_id) {
+          throw new Error('Product not registered with AI service');
         }
 
-      } catch (err) {
-        console.error('Error fetching data:', err);
-        setError(err.message);
-        // Use mock data as fallback
-        setProduct({ id: productId, p_name: mockSentimentData.products[0].product_name });
-        setSentimentData(mockSentimentData.products[0]);
+        // First, send reviews for analysis one by one
+        const reviewsForAnalysis = (supabaseProduct.p_reviews || []).map(review => ({
+          product_id: supabaseProduct.p_id,
+          review: review.review
+        }));
+
+        if (reviewsForAnalysis.length > 0) {
+          console.log('Starting analysis of reviews:', reviewsForAnalysis.length);
+          setLoading(true);
+
+          // Process reviews sequentially
+          for (const reviewData of reviewsForAnalysis) {
+            try {
+              console.log('Analyzing review:', reviewData);
+              const response = await fetch('https://5f4e-34-16-138-253.ngrok-free.app/analyze-feedback', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(reviewData)
+              });
+
+              if (!response.ok) {
+                console.error('Error analyzing review:', reviewData);
+                continue;
+              }
+
+              const result = await response.json();
+              console.log('Review analysis result:', result);
+
+              await new Promise(resolve => setTimeout(resolve, 500));
+            } catch (reviewError) {
+              console.error('Error processing review:', reviewError);
+            }
+          }
+        }
+
+        // Then, fetch the analyzed sentiment data using p_id
+        console.log('Fetching sentiment data for product ID:', supabaseProduct.p_id);
+        const sentimentResponse = await fetch(`https://5f4e-34-16-138-253.ngrok-free.app/product-sentiment/${supabaseProduct.p_id}`);
+        
+        if (!sentimentResponse.ok) {
+          throw new Error('Failed to fetch sentiment data');
+        }
+
+        const apiSentimentData = await sentimentResponse.json();
+        console.log('API Sentiment Data:', apiSentimentData);
+        
+        // Transform API data to match our component's expected format
+        const transformedSentimentData = {
+          _id: productId,
+          product_name: apiSentimentData.product_name,
+          positive_count: apiSentimentData.positive_count,
+          negative_count: apiSentimentData.negative_count,
+          neutral_count: apiSentimentData.neutral_count,
+          positive: apiSentimentData.positive,
+          negative: apiSentimentData.negative,
+          competitor_analysis: apiSentimentData.competitor_analysis,
+          reviews: apiSentimentData.reviews || apiSentimentData.summaries?.map(summary => ({
+            review: summary.summary,
+            sentiment: summary.sentiment,
+            confidence: 1.0
+          })) || []
+        };
+
+        setSentimentData(transformedSentimentData);
+
+      } catch (apiError) {
+        console.error('Error with AI analysis:', apiError);
+        // Fallback to mock data on error
+        const mockProduct = mockSentimentData.products.find(p => 
+          p.product_name.toLowerCase() === product?.p_name?.toLowerCase()
+        ) || mockSentimentData.products[0];  // Use first mock product as default fallback
+        
+        console.log('Using mock data:', mockProduct);
+        setSentimentData(mockProduct);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -592,39 +604,9 @@ const ProductAnalytics = () => {
     };
   };
 
-  const getFeatureComparisonData = () => {
-    if (!sentimentData?.competitor_analysis) return null;
-
-    const mainCompetitor = sentimentData.competitor_analysis[0];
-    if (!mainCompetitor?.filters) return null;
-
-    const topFeatures = mainCompetitor.filters
-      .slice(0, 10)
-      .sort((a, b) => b.count - a.count);
-
-    return {
-      labels: topFeatures.map(f => f.label),
-      datasets: [
-        {
-          label: 'Feature Mentions',
-          data: topFeatures.map(f => f.count),
-          backgroundColor: 'rgba(54, 162, 235, 0.5)',
-          borderColor: 'rgba(54, 162, 235, 1)',
-          borderWidth: 1,
-        },
-      ],
-    };
-  };
-
   if (loading) return (
     <div className="flex items-center justify-center h-64">
       <div className="text-lg">Loading product analytics...</div>
-    </div>
-  );
-  
-  if (error) return (
-    <div className="flex items-center justify-center h-64">
-      <div className="text-lg text-red-500">Error: {error}</div>
     </div>
   );
   
